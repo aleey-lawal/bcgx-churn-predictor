@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCG X Churn Predictor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header {
+            background: linear-gradient(135deg, #1a237e, #283593);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        header h1 { font-size: 28px; margin-bottom: 8px; }
+        header p  { font-size: 15px; opacity: 0.9; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .metric-card .label { font-size: 13px; color: #666; margin-bottom: 6px; }
+        .metric-card .value { font-size: 28px; font-weight: bold; color: #1a237e; }
+        .metric-card .value.low { color: #c62828; }
+
+        .warning-banner {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .warning-banner strong { color: #856404; }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #1a237e;
+            border-bottom: 2px solid #e8eaf6;
+            padding-bottom: 10px;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid #e0e0e0; }
+        th { background: #e8eaf6; color: #1a237e; font-weight: 600; }
+        tr:hover td { background: #f5f5f5; }
+
+        .method-get  { color: #2e7d32; font-weight: bold; }
+        .method-post { color: #1565c0; font-weight: bold; }
+
+        footer {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        footer a { color: #1a237e; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <header>
+        <h1>⚡ BCG X Customer Churn Predictor</h1>
+        <p>
+            c
+        </p>
+    </header>
+
+    <!-- Model Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="label">Accuracy</div>
+            <div class="value">{{ metrics.accuracy * 100 | round(1) }}%</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Precision</div>
+            <div class="value">{{ metrics.precision * 100 | round(1) }}%</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Recall ⚠️</div>
+            <div class="value low">{{ metrics.recall * 100 | round(1) }}%</div>
+        </div>
+    </div>
+
+    <!-- Honest Warning -->
+    <div class="warning-banner">
+        <strong>⚠️ Model Limitation — Displayed Honestly:</strong><br>
+        This model correctly identifies only
+        <strong>{{ metrics.churners_caught }} out of {{ metrics.total_churners_in_test }}</strong>
+        actual churners in the test set.
+        The low recall is caused by <strong>class imbalance</strong> — only ~10% of
+        customers churn, so the model defaults to predicting "no churn" for most customers.
+        Improvements would include SMOTE oversampling or class weight balancing.
+        <strong>Use churn_probability as a risk indicator, not a binary verdict.</strong>
+    </div>
+
+    <!-- API Endpoints -->
+    <div class="card">
+        <h2>📡 API Endpoints</h2>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td class="method-get">GET</td>
+                <td>/</td>
+                <td>This page — API overview and documentation</td>
+            </tr>
+            <tr>
+                <td class="method-get">GET</td>
+                <td>/health</td>
+                <td>Health check — confirms API is running</td>
+            </tr>
+            <tr>
+                <td class="method-get">GET</td>
+                <td>/metrics</td>
+                <td>Full model performance metrics as JSON</td>
+            </tr>
+            <tr>
+                <td class="method-get">GET</td>
+                <td>/features</td>
+                <td>List of all {{ feature_count }} features used by the model</td>
+            </tr>
+            <tr>
+                <td class="method-post">POST</td>
+                <td>/predict</td>
+                <td>Submit customer data and get churn prediction</td>
+            </tr>
+            <tr>
+                <td class="method-get">GET</td>
+                <td>/docs</td>
+                <td>Interactive Swagger UI — test the API in your browser</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Example API Call -->
+    <div class="card">
+        <h2>🔌 Example API Call</h2>
+        <pre>
+curl -X POST "https://your-app.onrender.com/predict" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "id": "24011ae4ebbe3035111d65367b7f220",
+       "cons_12m": 54946.0,
+       "cons_gas_12m": 0.0,
+       "cons_last_month": 0.0,
+       "imp_cons": 0.0,
+       "has_gas": "f",
+       "date_activ": "2012-11-15",
+       "date_end": "2016-11-15",
+       "date_modif_prod": "2012-11-15",
+       "date_renewal": "2015-11-15",
+       "forecast_cons_12m": 4183.0,
+       "forecast_discount_energy": 0.0,
+       "forecast_meter_rent_12m": 1.78,
+       "forecast_price_energy_off_peak": 0.095,
+       "forecast_price_energy_peak": 0.0,
+       "forecast_price_pow_off_peak": 44.26,
+       "margin_gross_pow_ele": 268.0,
+       "margin_net_pow_ele": 268.0,
+       "net_margin": 309.0,
+       "pow_max": 180.0,
+       "nb_prod_act": 1.0,
+       "num_years_antig": 3.0,
+       "origin_up": "lxidpiddsbxsbosboudaobnobaocl",
+       "channel_sales": "MISSING"
+     }'</pre>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="card">
+        <h2>🛠️ Tech Stack</h2>
+        <p style="font-size:14px; line-height:2;">
+            <strong>Model:</strong> Random Forest Classifier (1000 trees) · scikit-learn<br>
+            <strong>API:</strong> FastAPI · Uvicorn · Pydantic<br>
+            <strong>Data:</strong> pandas · numpy · 193,002 price records<br>
+            <strong>Deployment:</strong> Render.com (free tier)
+        </p>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+    Built by
+    <a href="https://aleey-lawal.github.io" target="_blank">Lawal Lawal Ali</a>
+    ·
+    <a href="https://github.com/aleey-lawal/bcgx-churn-predictor" target="_blank">GitHub Repo</a>
+    ·
+    <a href="/docs" target="_blank">API Docs (Swagger)</a>
+    ·
+    BCG X Data Science Job Simulation
+</footer>
+</body>
+</html>
