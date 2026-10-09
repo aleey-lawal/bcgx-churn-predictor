@@ -8,7 +8,6 @@ __pycache__/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
-*.ipynb
 
 # Large data files
 data/price_data.csv
