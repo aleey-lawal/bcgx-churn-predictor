@@ -50,15 +50,27 @@ model_metrics = joblib.load(os.path.join(BASE_DIR, 'model', 'model_metrics.pkl')
 # these are displayed honestly in the API responses and frontend
 
 # load the price dataset — needed by the preprocessing pipeline
-# ✅ FIXED — load the actual price data
-price_df = pd.read_csv(os.path.join(BASE_DIR, 'data', 'clean_price_data.csv'))
-# load the cleaned price dataset (193,002 rows x 8 columns)
-price_df['price_date'] = pd.to_datetime(price_df['price_date'], format='%Y-%m-%d')
-# convert price_date from string to datetime for date-based calculations
-print(f"✅ Price data loaded: {price_df.shape}")
-print(f"   Columns: {price_df.columns.tolist()}")
+# load price data if available — use fallback if not found on server
+price_data_path = os.path.join(BASE_DIR, 'data', 'clean_price_data.csv')
 
-print("✅ Model, features, and data loaded successfully")
+if not os.path.exists(price_data_path):
+    # try original price data as fallback
+    price_data_path = os.path.join(BASE_DIR, 'data', 'price_data.csv')
+
+if os.path.exists(price_data_path):
+    price_df = pd.read_csv(price_data_path)
+    price_df['price_date'] = pd.to_datetime(
+        price_df['price_date'], format='%Y-%m-%d')
+    print(f"✅ Price data loaded: {price_df.shape}")
+else:
+    # no price data available on server — use empty DataFrame
+    # pipeline.py handles this gracefully by filling price features with 0
+    price_df = pd.DataFrame(columns=[
+        'id', 'price_date', 'price_off_peak_var',
+        'price_peak_var', 'price_mid_peak_var',
+        'price_off_peak_fix', 'price_peak_fix', 'price_mid_peak_fix'
+    ])
+    print("⚠️ Price data not found — price features will default to 0")
 
 
 # ── Request Body Schema ───────────────────────────────────────────────────────
